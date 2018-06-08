@@ -1,17 +1,9 @@
--- This file was automatically generated for the LuaDist project.
-
 package = "luavel"
-version = "0.0-1"
+version = "0.0-2"
 
--- LuaDist source
 source = {
-  tag = "0.0-1",
-  url = "git://github.com/LuaDist-testing/luavel.git"
+    url = "git://github.com/eklundkristoffer/luavel"
 }
--- Original source
--- source = {
---     url = "git://github.com/eklundkristoffer/luavel"
--- }
 
 description = {
     summary = "An example for the LuaRocks tutorial.",

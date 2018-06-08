@@ -123,9 +123,12 @@ end
 -- Run the given command.
 -- 
 -- @param {Command} self
+-- @param {String} command
 -- @return {Closure}
-function Command.run(self)
-    return self.commands[self.arguments[1]](self)
+function Command.run(self, command)
+    local command = command or self.arguments[1]
+
+    return self.commands[command](self)
 end
 
 -- Lets initialize a new command instance. 
@@ -140,6 +143,8 @@ end)
 
 if command:exists() then
     command:run()
+elseif #arg <= 0 then
+    command:run('--help')
 else
     print("\27[31mcommand ".. arg[1] .." do not exist, run luavel --help to view all available commands. \27[0m")
 end
