@@ -1,0 +1,145 @@
+#!/usr/bin/env lua
+
+-- require LuaFileSystem
+local lfs = require "lfs"
+
+local Command = {}
+Command.__index = Command
+
+-- Split a string by string.
+--
+-- @param {String} div
+-- @param {String} str
+-- @return {Table}
+function explode(div, str)
+    if (div=='') then return false end
+    local pos,arr = 0,{}
+    for st,sp in function() return string.find(str,div,pos,true) end do
+    table.insert(arr,string.sub(str,pos,st-1))
+    pos = sp + 1
+    end
+    table.insert(arr,string.sub(str,pos))
+    return arr
+end
+
+-- Get the size of a table, with support for non-integer indexs.
+-- 
+-- @param {Table} table
+-- @return {Integer}
+function countTableSize(table)
+    local n = 0
+    for k, v in pairs(table) do
+        n = n + 1
+    end
+    return n
+end
+
+-- Construct a new Command instance.
+-- 
+-- @param {Table} args
+-- @return {Command}
+function Command.new(args)
+    local self = setmetatable({}, Command)
+    self.commands = {}
+    self.arguments = args
+    self.inputs = {}
+    return self
+end
+
+-- Register given command.
+--
+-- @param {Command} self
+-- @param {String} command
+-- @param {Closure} callback
+function Command.register(self, command, callback)
+    self.commands[command] = callback
+end
+
+-- Determine if given command is registered.
+--
+-- @param {Command} self
+-- @return {Boolean}
+function Command.exists(self)
+    return self.commands[self.arguments[1]] ~= nil
+end
+
+-- Determine if command has given argument sepcified. 
+-- 
+-- @param {Command} self
+-- @param {String} argument
+-- @return {Boolean}
+function Command.hasArgument(self, argument)
+    for k,v in pairs(self.arguments) do
+        if v == argument then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Determine on command has given input.
+-- 
+-- @param {Command} self
+-- @param {String} input
+-- @return {Boolean}
+function Command.hasInput(self, input)
+    local boolean = false
+
+    for k,v in pairs(self.arguments) do
+        v = explode('=', v)
+
+        if #v > 1 and #v < 3 and #v[2] >= 1 and v[1] == input then
+            self.inputs[v[1]] = v[2]
+
+            boolean = true
+        end
+    end
+
+    return boolean
+end
+
+-- Get the given input value.
+-- 
+-- @param {Command} self
+-- @param {String} input
+-- @return {String|Boolean}
+function Command.getInput(self, input)
+    if countTableSize(self.inputs) >= 1 then
+        return self.inputs[input]
+    end
+
+    for k,v in pairs(self.arguments) do
+        v = explode('=', v)
+
+        if #v > 1 and #v < 3 and v[1] == input then
+            return v[2]
+        end
+    end
+
+    return false
+end
+
+-- Run the given command.
+-- 
+-- @param {Command} self
+-- @return {Closure}
+function Command.run(self)
+    return self.commands[self.arguments[1]](self)
+end
+
+-- Lets initialize a new command instance. 
+local command = Command.new(arg)
+
+-- Example how we register a new command, and its callback. 
+command:register('--help', function(command) 
+    if command:hasInput('path') then
+        print(command:getInput('path'))
+    end
+end)
+
+if command:exists() then
+    command:run()
+else
+    print("\27[31mcommand ".. arg[1] .." do not exist, run luavel --help to view all available commands. \27[0m")
+end
